@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<package format="2">
+    <name>Goto_tools</name>
+    <version>0.0.0</version>
+    <description>
+        A experiment of kidnap problem.
+    </description>
+    <maintainer email="ambitious0816@gmail.com">taishiyamamoto</maintainer>
+    <maintainer email="TODO@gmail.com">Hiroki-Goto</maintainer>
+    <author>taishiyamamoto</author>
+    <author>Hiroki-Goto</author>
+    <license>TODO</license>  
+
+    <buildtool_depend>catkin</buildtool_depend>
+
+    <exec_depend>pub_service</exec_depend>
+    <exec_depend>randam_kidnap</exec_depend>
+    
+    <export>
+        <metapackage/>
+    </export>
+</package>

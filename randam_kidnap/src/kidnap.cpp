@@ -20,6 +20,7 @@ class RandamKidnap {
 			nh.param("world_frame", world_frame, std::string("/map"));
 			//乱数の初期化
 
+			first_entry_ = true;
 			create_noise_flag_ = false;
 			kidnap_flag_ = false;
 
@@ -47,6 +48,7 @@ class RandamKidnap {
 		std::string world_frame;
 		std::string robot_frame;
 		static ros::Time now_time;
+		bool first_entry_;
 		bool create_noise_flag_, kidnap_flag_;
 
 		int kidnap_counter_;
@@ -120,6 +122,11 @@ void RandamKidnap::TfCallback(const tf2_msgs::TFMessage &tf){
 		if((ros::Time::now() - saved_time).toSec() > 30){
 			//ROS_INFO("nya");
 			saved_time = ros::Time::now();
+
+			if(first_entry_){
+				first_entry_ = false;
+				return;
+			}
 
 			//距離の誘拐
 			//誘拐距離は3〜60ｍ

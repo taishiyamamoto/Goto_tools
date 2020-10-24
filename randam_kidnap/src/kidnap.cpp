@@ -1,4 +1,5 @@
 #include<ros/ros.h>
+#include<ros/package.h>
 #include<tf/transform_listener.h>
 #include <tf2_msgs/TFMessage.h>
 #include <geometry_msgs/PointStamped.h>
@@ -7,6 +8,17 @@
 
 #include <string>
 #include <random>
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <sstream>
+#include <vector>
+
+struct kidnap_pose
+{
+	double x;
+	double y;
+};
 
 class RandamKidnap {
 	public:
@@ -29,6 +41,9 @@ class RandamKidnap {
     		menu.menus.resize(1);
     		menu.title = "Pseudo Kidnap Counter";
 			kidnap_counter_ = 0;
+
+			ifs_.open("/home/taishi/short_kidnap.txt");
+			load();
 		}
 		void ClickedCallback(const geometry_msgs::PointStampedConstPtr &point);
 		void TfCallback(const tf2_msgs::TFMessage &tf);
@@ -53,10 +68,50 @@ class RandamKidnap {
 
 		int kidnap_counter_;
 
+		std::vector<kidnap_pose> kidnap_poses_;
+		std::ifstream ifs_;
+		void load();
+
 		std::random_device seed_gen;
 		double CreateRanramNum(double min, double max);
 		void GnssCallback(const geometry_msgs::PoseWithCovarianceStampedConstPtr& gnss_msg);
 };
+
+void
+RandamKidnap::load(){
+	std::string line;
+	std::string s_conma;
+	kidnap_pose kp;
+	bool fg = true;
+
+    while (std::getline(ifs_,line))
+    {
+        std::istringstream iss(line);
+		if(iss.str().empty()){
+			break;
+		}
+
+        while (std::getline(iss,s_conma,','))
+        {   
+            if(fg){
+                //std::cout<<"x="<<std::stod(s_conma)<<std::endl;
+                kp.x = std::stod(s_conma);
+                fg=false;
+            }
+            else if (!fg)
+            {
+                //std::cout<<"y="<<std::stod(s_conma)<<std::endl;
+                kp.y = std::stod(s_conma);
+                fg=true;
+            }
+
+        }
+        kidnap_poses_.push_back(kp);
+        //std::cout<<"///"<<std::endl;
+    }
+	ROS_INFO("load kidnap positions size is %d",kidnap_poses_.size());
+	return;
+}
 
 void
 RandamKidnap::GnssCallback(const geometry_msgs::PoseWithCovarianceStampedConstPtr& gnss_msg){
@@ -140,15 +195,23 @@ void RandamKidnap::TfCallback(const tf2_msgs::TFMessage &tf){
 				kidnap_dis_x = CreateRanramNum(-10.0, 10.0);
 				kidnap_dis_y = CreateRanramNum(-10.0, 10.0);
 				dis = sqrt(kidnap_dis_x * kidnap_dis_x + kidnap_dis_y + kidnap_dis_y);
-				ROS_INFO("%lf,%lf",kidnap_dis_x, kidnap_dis_y);
-				ROS_INFO("%lf",dis);
+				//ROS_INFO("%lf,%lf",kidnap_dis_x, kidnap_dis_y);
+				//ROS_INFO("%lf",dis);
 			}while(dis <= 3.0);
-			*/
-			kidnap_dis_x = CreateRanramNum(-50.0, 50.0);
-			kidnap_dis_y = CreateRanramNum(-50.0, 50.0);
-			dis = sqrt(kidnap_dis_x * kidnap_dis_x + kidnap_dis_y * kidnap_dis_y);
+			
+			//kidnap_dis_x = CreateRanramNum(-50.0, 50.0);
+			//kidnap_dis_y = CreateRanramNum(-50.0, 50.0);
+			//dis = sqrt(kidnap_dis_x * kidnap_dis_x + kidnap_dis_y * kidnap_dis_y);
 			ROS_INFO("%lf,%lf",kidnap_dis_x, kidnap_dis_y);
-			ROS_INFO("%lf",dis);
+			//ROS_INFO("%lf",dis);
+			*/
+
+			
+			kidnap_dis_x = kidnap_poses_[kidnap_counter_].x;
+			kidnap_dis_y = kidnap_poses_[kidnap_counter_].y;
+			ROS_INFO("%lf,%lf",kidnap_dis_x, kidnap_dis_y);
+			
+		
 			pose_t.pose.pose.position.x += kidnap_dis_x;
 			pose_t.pose.pose.position.y += kidnap_dis_y;
 
@@ -159,6 +222,11 @@ void RandamKidnap::TfCallback(const tf2_msgs::TFMessage &tf){
 			geometry_msgs::Quaternion geo_quat;
 			quaternionTFToMsg(tf_quat,geo_quat);
 			pose_t.pose.pose.orientation = geo_quat;
+
+			//pose_t.pose.pose.orientation.x = robot_gl.getRotation().x();
+			//pose_t.pose.pose.orientation.y = robot_gl.getRotation().y();
+			//pose_t.pose.pose.orientation.z = robot_gl.getRotation().z();
+			//pose_t.pose.pose.orientation.w = robot_gl.getRotation().w();
 
 			kidnap_counter_++;
 			std::stringstream kidnap_ss; 
